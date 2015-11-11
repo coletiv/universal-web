@@ -1,0 +1,3 @@
+[submodule "deps/msgpack-lite"]
+	path = deps/msgpack-lite
+	url = https://github.com/kawanet/msgpack-lite.git

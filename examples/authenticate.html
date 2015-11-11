@@ -1,0 +1,94 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>transport-web / authenticate</title>
+  <script src="../deps/msgpack-lite/dist/msgpack.min.js"></script>
+  <script language="javascript" type="text/javascript">
+	//<![CDATA[
+	var wsUri = "ws://localhost/"; 
+	var output;  
+	function init() { 
+		output = document.getElementById("output"); 
+		testWebSocket(); 
+	}  
+	
+	function testWebSocket() { 
+		websocket = new WebSocket(wsUri); 
+		websocket.binaryType = 'arraybuffer';
+		
+		websocket.onopen = function(evt) { 
+			onOpen(evt) 
+		}; 
+		
+		websocket.onclose = function(evt) { 
+			onClose(evt) 
+		};
+		
+		websocket.onmessage = function(evt) { 
+			onMessage(evt) 
+		}; 
+		
+		websocket.onerror = function(evt) { 
+			onError(evt)
+		}; 
+	}  
+	
+	function onOpen(evt) { 
+		writeToScreen("CONNECTED"); 
+		doSend("WebSocket rocks"); 
+	}  
+	
+	function onClose(evt) { 
+		writeToScreen("DISCONNECTED"); 
+	}  
+	
+	function onMessage(evt) { 
+		writeToScreen("RCV Data Type: " + evt.data.constructor.name); 
+		writeToScreen("RCV Data Length: " + evt.data.byteLength );  
+		var buffer = new Uint8Array(evt.data);
+		var object = msgpack.decode(buffer);
+		var string = JSON.stringify(object)
+		writeToScreen("RCV: " + string);
+		//writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'<\/span>'); 
+		//websocket.close(); 
+		
+		var session_close_message = ["session", "close", {"shared_secret":"367b254f4f5c453b662b614038316f7123332a793366436b41383e433d", "device_identifier":"123"}];
+		var data = msgpack.encode(session_close_message);
+		writeToScreen("SENT: " + JSON.stringify(session_close_message));  	
+		writeToScreen("SENT Data Type: " + data.constructor.name);  	
+		writeToScreen("SENT Data Type: " + data.buffer.constructor.name);  	
+		websocket.send(data.buffer); 
+	}  
+	
+	function onError(evt) { 
+		writeToScreen('<span style="color: red;">ERROR:<\/span> ' + evt.data); 
+	}  
+	
+	function doSend(message) {
+		
+		//transportSessionSendMessage(session, ["session", "authenticate", {"shared_secret":session.sharedSecret, "device_identifier":session.deviceIdentifier}])
+		var session_authenticate_message = ["session", "authenticate", {"shared_secret":"367b254f4f5c453b662b614038316f7123332a793366436b41383e433d", "device_identifier":"123"}];
+		var data = msgpack.encode(session_authenticate_message);
+		writeToScreen("SENT: " + JSON.stringify(session_authenticate_message));  	
+		writeToScreen("SENT Data Type: " + data.constructor.name);  	
+		writeToScreen("SENT Data Type: " + data.buffer.constructor.name);  	
+		websocket.send(data.buffer); 
+		
+		
+	}
+	
+	function writeToScreen(message) { 
+		var pre = document.createElement("p");
+		pre.style.wordWrap = "break-word"; 
+		pre.innerHTML = message; 
+		output.appendChild(pre); 
+	}
+	
+	window.addEventListener("load", init, false);  
+	
+	//]]>
+  </script>
+</head>
+<body>
+	<section id="output"></section>
+</body>
+</html>
